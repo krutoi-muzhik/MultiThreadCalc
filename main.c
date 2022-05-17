@@ -12,7 +12,7 @@ double func3 (double x) {
 	return 1;
 }
 
-int main () {
+int main (int argc, char *argv[]) {
 	double sum = 0.0;
 	time_t dt = time (NULL);
 
@@ -21,5 +21,6 @@ int main () {
 
 	dt = time (NULL) - dt;
 	printf ("time taken to calculate = %d\n", dt);
-	return 0;
+	
+	exit (EXIT_SUCCESS);
 }
