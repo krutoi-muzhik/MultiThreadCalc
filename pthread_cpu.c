@@ -14,19 +14,19 @@ double func3 (double x) {
 
 double calc (int nthreads, double lower, double upper, double step) {
 	if (upper < lower) {
-		handle_error ("Invalid limits: upper must be >= lower\n");
+		handle_error ("Invalid limits: upper must be >= lower");
 	}
 
 	threadinfo_t *ThreadInfo = ThreadInfoInit (nthreads, lower, upper, step);
 
 	pthread_t *threads = (pthread_t *) calloc (nthreads, sizeof (pthread_t));
 	if (threads == NULL) {
-		handle_error  ("calloc error\n");
+		handle_error  ("calloc error");
 	}
 
 	for (int i = 0; i < nthreads; i ++) {
 		if (pthread_create (threads + i, NULL, ThreadFunc, ThreadInfo->ThreadMem + i * ThreadInfo->MemSize) != 0) {
-			handle_error ("pthread_create ERROR\n");
+			handle_error ("pthread_create ERROR");
 		}
 	}
 
@@ -34,7 +34,7 @@ double calc (int nthreads, double lower, double upper, double step) {
 
 	for (size_t i = 0; i < nthreads; i ++) {
 		if (pthread_join (threads[i], NULL) != 0) {
-			handle_error ("pthread_join ERROR\n");
+			handle_error ("pthread_join ERROR");
 		}
 
 		if (i < ThreadInfo->nhard) {
@@ -48,7 +48,7 @@ double calc (int nthreads, double lower, double upper, double step) {
 
 threadinfo_t *ThreadInfoInit (int nthreads, double lower, double upper, double step) {
 	if (nthreads < 1) {
-		handle_error ("ThreadInfoConstruct ERROR: number of threads must be > 0\n");
+		handle_error ("ThreadInfoConstruct ERROR: number of threads must be > 0");
 	}
 
 	threadinfo_t *ThreadInfo = (threadinfo_t *) calloc (1, sizeof (threadinfo_t));
@@ -57,14 +57,15 @@ threadinfo_t *ThreadInfoInit (int nthreads, double lower, double upper, double s
 	ThreadInfo->MemSize = (sizeof (threadmem_t) / CacheLineSize + 1) * CacheLineSize;
 
 	printf ("memsize = %ld\n", ThreadInfo->MemSize);
-	ThreadInfo->ThreadMem = calloc (nthreads, ThreadInfo->MemSize);
 
 	ThreadInfo->nhard = get_nprocs ();
 	if (ThreadInfo->nhard < 1) {
-		handle_error ("get_nprocs ERROR: Got number of threads < 0\n");
+		handle_error ("get_nprocs ERROR: Got number of threads < 0");
 	}
 
-	ThreadInfo->nempty = (ThreadInfo->nhard < nthreads) ? (nthreads - ThreadInfo->nhard) : (0);
+	ThreadInfo->nempty = (ThreadInfo->nhard < nthreads) ? (nthreads - ThreadInfo->nhard) : (ThreadInfo->nhard - nthreads);
+
+	ThreadInfo->ThreadMem = calloc (nthreads + ThreadInfo->nempty, ThreadInfo->MemSize);
 
 	double len = (upper - lower) / nthreads;
 
@@ -101,7 +102,7 @@ void *ThreadFunc (void *arg) {
 		CPU_SET (Mem->core_id, &CPU);
 
 		if (pthread_setaffinity_np (threadid, sizeof (cpu_set_t), &CPU) < 0) {
-			handle_error ("pthread_setaffinity_np\n");
+			handle_error ("pthread_setaffinity_np");
 		}
 	}
 

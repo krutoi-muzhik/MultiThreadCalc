@@ -13,7 +13,7 @@ int main (int argc, char *argv[]) {
 		handle_error ("Invalid arg: Number of threads must be > 0\n");
 	}
 
-	double sum = calc (nthreads, -10.0, 10.0, 0.00000002);
+	double sum = calc (nthreads, -10.0, 10.0, 0.0000001);
 
 	printf ("sum \t%lf\n", sum);
 	
