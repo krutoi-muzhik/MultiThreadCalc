@@ -1,26 +1,21 @@
-#include "integral.h"
-
-double func1 (double x) {
-	return sin (cos (x)) - 5 * x * x * x * x + 10 * exp (x * x) + x;
-}
-
-double func2 (double x) {
-	return x;
-}
-
-double func3 (double x) {
-	return 1;
-}
+#include "pthread_cpu.h"
 
 int main (int argc, char *argv[]) {
-	double sum = 0.0;
-	time_t dt = time (NULL);
+	int nthreads = 0;
 
-	sum = Trapeze (-5.0, 5.0, 10000000, func3);
-	printf ("sum = %lf\n", sum);
+	if (argc < 2)
+		nthreads = 1;
 
-	dt = time (NULL) - dt;
-	printf ("time taken to calculate = %d\n", dt);
+	else
+		nthreads = atoi (argv[1]);
+
+	if (nthreads < 1) {
+		handle_error ("Invalid arg: Number of threads must be > 0\n");
+	}
+
+	double sum = calc (nthreads, -10.0, 10.0, 0.00000002);
+
+	printf ("sum \t%lf\n", sum);
 	
 	exit (EXIT_SUCCESS);
 }
