@@ -19,12 +19,12 @@ double calc (int nthreads, double lower, double upper, double step) {
 
 	threadinfo_t *ThreadInfo = ThreadInfoInit (nthreads, lower, upper, step);
 
-	pthread_t *threads = (pthread_t *) calloc (nthreads, sizeof (pthread_t));
+	pthread_t *threads = (pthread_t *) calloc (nthreads + ThreadInfo->nempty, sizeof (pthread_t));
 	if (threads == NULL) {
 		handle_error  ("calloc error");
 	}
 
-	for (int i = 0; i < nthreads; i ++) {
+	for (int i = 0; i < nthreads + ThreadInfo->nempty; i ++) {
 		if (pthread_create (threads + i, NULL, ThreadFunc, ThreadInfo->ThreadMem + i * ThreadInfo->MemSize) != 0) {
 			handle_error ("pthread_create ERROR");
 		}
@@ -32,12 +32,12 @@ double calc (int nthreads, double lower, double upper, double step) {
 
 	double sum = 0;
 
-	for (size_t i = 0; i < nthreads; i ++) {
+	for (size_t i = 0; i < nthreads + ThreadInfo->nempty; i ++) {
 		if (pthread_join (threads[i], NULL) != 0) {
 			handle_error ("pthread_join ERROR");
 		}
 
-		if (i < ThreadInfo->nhard) {
+		if (i < nthreads) {
 			threadmem_t *Mem = (threadmem_t *)(ThreadInfo->ThreadMem + i * ThreadInfo->MemSize);
 			sum += Mem->sum; 
 		}
@@ -94,6 +94,8 @@ void *ThreadFunc (void *arg) {
 	if (Mem->core_id < 0)
 		return NULL;
 
+	printf ("id = %d\n", Mem->core_id);
+
 	if (Mem->core_id >= 0) {
 		cpu_set_t CPU;
 		pthread_t threadid = pthread_self ();
@@ -117,7 +119,7 @@ void DumpInfo (const char *pathname, threadinfo_t *ThreadInfo) {
 	FILE *dumpfile = fopen (pathname, "w+");
 	threadinfo_t *info = NULL;
 
-	for (size_t i = 0; i < ThreadInfo->nthreads; i ++) {
+	for (size_t i = 0; i < ThreadInfo->nthreads + ThreadInfo->nempty; i ++) {
 		threadmem_t *Mem = (threadmem_t *) (ThreadInfo->ThreadMem + i * ThreadInfo->MemSize);
 		fprintf (dumpfile, "threadID: \t%ld \tcoreID: \t%d \tlower: \t%.4lf \tupper: \t%.4lf \tsum: \t%.4lf\n",
 					i, Mem->core_id, Mem->lower, Mem->upper, Mem->sum);
