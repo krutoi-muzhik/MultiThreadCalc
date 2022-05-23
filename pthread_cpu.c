@@ -14,7 +14,8 @@ double func3 (double x) {
 
 double calc (int nthreads, double lower, double upper, double step) {
 	if (upper < lower) {
-		handle_error ("Invalid limits: upper must be >= lower");
+		printf ("Invalid limits: upper must be >= lower");
+		exit (EXIT_FAILURE);
 	}
 
 	threadinfo_t *ThreadInfo = ThreadInfoInit (nthreads, lower, upper, step);
@@ -43,12 +44,13 @@ double calc (int nthreads, double lower, double upper, double step) {
 		}
 	}
 
-	printf ("sum \t%lf\n", sum);
+	return sum;
 }
 
 threadinfo_t *ThreadInfoInit (int nthreads, double lower, double upper, double step) {
 	if (nthreads < 1) {
-		handle_error ("ThreadInfoConstruct ERROR: number of threads must be > 0");
+		printf ("ThreadInfoConstruct ERROR: number of threads must be > 0");
+		exit (EXIT_FAILURE);
 	}
 
 	threadinfo_t *ThreadInfo = (threadinfo_t *) calloc (1, sizeof (threadinfo_t));
@@ -56,7 +58,7 @@ threadinfo_t *ThreadInfoInit (int nthreads, double lower, double upper, double s
 	int CacheLineSize = sysconf (_SC_LEVEL1_DCACHE_LINESIZE);
 	ThreadInfo->MemSize = (sizeof (threadmem_t) / CacheLineSize + 1) * CacheLineSize;
 
-	printf ("memsize = %ld\n", ThreadInfo->MemSize);
+	// printf ("memsize = %ld\n", ThreadInfo->MemSize);
 
 	ThreadInfo->nhard = get_nprocs ();
 	if (ThreadInfo->nhard < 1) {
@@ -94,7 +96,7 @@ void *ThreadFunc (void *arg) {
 	if (Mem->core_id < 0)
 		return NULL;
 
-	printf ("id = %d\n", Mem->core_id);
+	// printf ("id = %d\n", Mem->core_id);
 
 	if (Mem->core_id >= 0) {
 		cpu_set_t CPU;
@@ -117,7 +119,6 @@ void *ThreadFunc (void *arg) {
 
 void DumpInfo (const char *pathname, threadinfo_t *ThreadInfo) {
 	FILE *dumpfile = fopen (pathname, "w+");
-	threadinfo_t *info = NULL;
 
 	for (size_t i = 0; i < ThreadInfo->nthreads + ThreadInfo->nempty; i ++) {
 		threadmem_t *Mem = (threadmem_t *) (ThreadInfo->ThreadMem + i * ThreadInfo->MemSize);
